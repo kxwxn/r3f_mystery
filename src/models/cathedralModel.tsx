@@ -1,14 +1,17 @@
 "use client";
 
 import { useAnimations, useGLTF } from "@react-three/drei";
+import { useEffect, useRef } from "react";
+import { Group } from "three";
 
-useGLTF("/glb/cathedral.glb");
+useGLTF.preload("/glb/cathedral.glb");
 
 const CathedralModel = () => {
-  const { nodes, animations, scene } = useGLTF("/glb/cathedral.glb}");
-  const { actions } = useAnimations(animations, scene);
+  const group = useRef<Group>(null);
+  const { nodes, materials, scene } = useGLTF("/glb/cathedral.glb");
+
   return (
-    <group>
+    <group ref={group}>
       <primitive object={scene} />
     </group>
   );
