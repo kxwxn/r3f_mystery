@@ -1,11 +1,15 @@
 import { useEffect, useRef } from "react";
 import { useFrame } from "@react-three/fiber";
-import { Mesh, Vector3 } from "three";
+import { useGLTF } from "@react-three/drei";
+import { Group, Vector3 } from "three";
 
 export default function Alien() {
-  const meshRef = useRef<Mesh>(null);
+  const modelRef = useRef<Group>(null);
   const velocity = useRef<Vector3>(new Vector3(0, 0, 0));
   const keys = useRef<{ [key: string]: boolean }>({});
+
+  // astronaut 모델 로드
+  const { scene } = useGLTF("/glb/astronaut.glb");
 
   // 키보드 입력 처리
   useEffect(() => {
@@ -27,7 +31,7 @@ export default function Alien() {
   }, []);
 
   useFrame((state, delta) => {
-    if (!meshRef.current) return;
+    if (!modelRef.current) return;
 
     // 이동 속도 설정
     const moveSpeed = 5;
@@ -47,61 +51,24 @@ export default function Alien() {
     velocity.current.multiplyScalar(deceleration);
 
     // 위치 업데이트
-    meshRef.current.position.add(velocity.current);
+    modelRef.current.position.add(velocity.current);
 
-    // 이동 방향으로 회전 (부드럽게)
+    // 이동 방향으로 회전
     if (velocity.current.length() > 0.01) {
       const targetRotation = Math.atan2(velocity.current.x, velocity.current.z);
-      meshRef.current.rotation.y = targetRotation;
+      modelRef.current.rotation.y = targetRotation;
     }
 
     // 움직임에 따른 기울기 효과
-    meshRef.current.rotation.z = -velocity.current.x * 0.5;
-    meshRef.current.rotation.x = velocity.current.z * 0.5;
+    modelRef.current.rotation.z = -velocity.current.x * 0.5;
+    modelRef.current.rotation.x = velocity.current.z * 0.5;
   });
 
   return (
-    <mesh ref={meshRef}>
-      <mesh position={[0, 0, 0]}>
-        <icosahedronGeometry args={[1, 1]} />
-        <meshStandardMaterial
-          color={"#50c878"}
-          roughness={0.3}
-          metalness={0.7}
-          emissive={"#204030"}
-          emissiveIntensity={0.2}
-        />
-      </mesh>
-      {/* 에일리언의 눈 */}
-      <group position={[0, 0.5, 0.8]}>
-        <mesh position={[-0.3, 0, 0]}>
-          <sphereGeometry args={[0.15]} />
-          <meshStandardMaterial
-            color="#000"
-            emissive="#ff0000"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-        <mesh position={[0.3, 0, 0]}>
-          <sphereGeometry args={[0.15]} />
-          <meshStandardMaterial
-            color="#000"
-            emissive="#ff0000"
-            emissiveIntensity={0.5}
-          />
-        </mesh>
-        {/* 에일리언의 더듬이 */}
-        <group position={[0, 0.8, 0]}>
-          <mesh position={[-0.4, 0.3, 0]} rotation={[0, 0, Math.PI / 4]}>
-            <cylinderGeometry args={[0.02, 0.02, 0.5]} />
-            <meshStandardMaterial color="#50c878" />
-          </mesh>
-          <mesh position={[0.4, 0.3, 0]} rotation={[0, 0, -Math.PI / 4]}>
-            <cylinderGeometry args={[0.02, 0.02, 0.5]} />
-            <meshStandardMaterial color="#50c878" />
-          </mesh>
-        </group>
-      </group>
-    </mesh>
+    <primitive
+      ref={modelRef}
+      object={scene}
+      scale={[0.07, 0.07, 0.07]} // 모델 크기 조절이 필요할 수 있습니다
+    />
   );
 }
